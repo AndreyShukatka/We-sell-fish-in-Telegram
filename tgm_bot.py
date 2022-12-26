@@ -11,8 +11,10 @@ from moltin_store import (
     get_cart,
     get_cart_items,
     del_product_cart,
-    create_customer
+    create_customer,
+    checking_period_token
 )
+from datetime import datetime, timedelta
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
@@ -28,6 +30,7 @@ _database = None
 
 def start(bot, update):
     keyboard = []
+    moltin_token = checking_period_token(moltin_client_id, moltin_client_secret, db)
     all_products = get_all_products(moltin_token)
     for product in all_products:
         keyboard.append([InlineKeyboardButton(
@@ -45,6 +48,7 @@ def start(bot, update):
 
 
 def handle_menu(bot, update):
+    moltin_token = checking_period_token(moltin_client_id, moltin_client_secret, db)
     query = update.callback_query
     callback = query.data
     if callback == 'cart':
@@ -83,6 +87,7 @@ def handle_menu(bot, update):
 
 
 def handle_description(bot, update):
+    moltin_token = checking_period_token(moltin_client_id, moltin_client_secret, db)
     query = update.callback_query
     callback = query.data
     client_id = query['message']['chat']['id']
@@ -129,6 +134,7 @@ def handle_description(bot, update):
 
 
 def handle_cart(bot, update):
+    moltin_token = checking_period_token(moltin_client_id, moltin_client_secret, db)
     query = update.callback_query
     callback = query.data
     client_id = query['message']['chat']['id']
@@ -204,10 +210,15 @@ def handle_cart(bot, update):
         return "HANDLE_CART"
 
 
+
+
+
 def handle_contacts(bot, update):
+    moltin_token = checking_period_token(moltin_client_id, moltin_client_secret, db)
     email = update.message.text
     client_id = update.message.chat_id
-    regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b' # redex: https://www.mygreatlearning.com/blog/regular-expression-in-python/
+    # https://www.mygreatlearning.com/blog/regular-expression-in-python/
+    regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
     if re.fullmatch(regex, email):
         create_customer(moltin_token, email, client_id)
         update.effective_message.reply_text(
@@ -269,15 +280,13 @@ def get_database_connection():
 if __name__ == '__main__':
     env = Env()
     env.read_env()
-    moltin_client_id = env('MOLTIN_CLIENT_ID')
+    db = get_database_connection()
     moltin_client_secret = env('MOLTIN_CLIENT_SECRET')
-    moltin_token = get_moltin_token(
-        moltin_client_id,
-        moltin_client_secret
-    )
+    moltin_client_id = env('MOLTIN_CLIENT_ID')
     tgm_token = env('TGM_TOKEN')
     updater = Updater(tgm_token)
     dispatcher = updater.dispatcher
+    dispatcher.chat_data['access_token'] = db.get('access_token')
     dispatcher.add_handler(CallbackQueryHandler(handle_users_reply))
     dispatcher.add_handler(MessageHandler(Filters.text, handle_users_reply))
     dispatcher.add_handler(CommandHandler('start', handle_users_reply))

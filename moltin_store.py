@@ -1,6 +1,8 @@
 import requests
 from environs import Env
+import redis
 import argparse
+from datetime import datetime, timedelta
 
 
 def get_args():
@@ -77,7 +79,7 @@ def get_args():
     return args
 
 
-def get_moltin_token(moltin_client_id, moltin_client_secret):
+def get_moltin_token(moltin_client_id, moltin_client_secret, db = None):
     url = 'https://api.moltin.com/oauth/access_token'
     data = {
         'client_id': moltin_client_id,
@@ -86,7 +88,31 @@ def get_moltin_token(moltin_client_id, moltin_client_secret):
     }
     response = requests.post(url, data=data)
     response.raise_for_status()
+    if db:
+        now_time = datetime.now()
+        minutes_token_expiration = int(3600/60)
+        token_end_time = now_time + timedelta(minutes=minutes_token_expiration)
+        db.set('access_token', response.json().get('access_token'))
+        db.set('token_creation_time', str(now_time))
+        db.set('token_end_time', str(token_end_time))
     return response.json().get('access_token')
+
+
+def checking_period_token(moltin_client_id, moltin_client_secret, db):
+    date_formatter = '%Y-%m-%d %H:%M:%S.%f'
+    if db.get('token_creation_time'):
+        now_time = datetime.now()
+        token_creation_time = datetime.strptime(db.get('token_creation_time').decode(), date_formatter)
+        token_end_time = datetime.strptime(db.get('token_end_time').decode(), date_formatter)
+        if token_creation_time <= now_time <= token_end_time:
+            moltin_token = db.get('access_token').decode('utf-8')
+            return moltin_token
+        else:
+            moltin_token = get_moltin_token(moltin_client_id, moltin_client_secret, db)
+            return moltin_token
+    else:
+        moltin_token = get_moltin_token(moltin_client_id, moltin_client_secret, db)
+        return moltin_token
 
 
 def get_all_products(moltin_token):
