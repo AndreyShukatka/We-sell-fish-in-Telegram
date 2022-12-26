@@ -93,7 +93,6 @@ def get_moltin_token(moltin_client_id, moltin_client_secret, db=None):
         token_expiration = int(response.json().get('expires_in'))
         seconds = int(60)
         minutes_token_expiration = token_expiration / seconds
-        print(minutes_token_expiration, type(minutes_token_expiration))
         token_end_time = now_time + timedelta(minutes=minutes_token_expiration)
         db.set('access_token', response.json().get('access_token'))
         db.set('token_creation_time', str(now_time))
