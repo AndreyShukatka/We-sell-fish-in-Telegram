@@ -3,7 +3,6 @@ import re
 from environs import Env
 from moltin_store import (
     get_all_products,
-    get_moltin_token,
     get_product,
     get_product_stock,
     get_image_href,
@@ -14,8 +13,6 @@ from moltin_store import (
     create_customer,
     checking_period_token
 )
-from datetime import datetime, timedelta
-
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Filters,

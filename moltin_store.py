@@ -1,6 +1,5 @@
 import requests
 from environs import Env
-import redis
 import argparse
 from datetime import datetime, timedelta
 
