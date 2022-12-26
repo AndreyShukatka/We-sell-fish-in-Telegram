@@ -79,7 +79,7 @@ def get_args():
     return args
 
 
-def get_moltin_token(moltin_client_id, moltin_client_secret, db = None):
+def get_moltin_token(moltin_client_id, moltin_client_secret, db=None):
     url = 'https://api.moltin.com/oauth/access_token'
     data = {
         'client_id': moltin_client_id,
@@ -90,7 +90,10 @@ def get_moltin_token(moltin_client_id, moltin_client_secret, db = None):
     response.raise_for_status()
     if db:
         now_time = datetime.now()
-        minutes_token_expiration = int(3600/60)
+        token_expiration = int(response.json().get('expires_in'))
+        seconds = int(60)
+        minutes_token_expiration = token_expiration / seconds
+        print(minutes_token_expiration, type(minutes_token_expiration))
         token_end_time = now_time + timedelta(minutes=minutes_token_expiration)
         db.set('access_token', response.json().get('access_token'))
         db.set('token_creation_time', str(now_time))
