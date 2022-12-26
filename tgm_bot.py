@@ -207,7 +207,7 @@ def handle_cart(bot, update):
 def handle_contacts(bot, update):
     email = update.message.text
     client_id = update.message.chat_id
-    regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+    regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b' # redex: https://www.mygreatlearning.com/blog/regular-expression-in-python/
     if re.fullmatch(regex, email):
         create_customer(moltin_token, email, client_id)
         update.effective_message.reply_text(
