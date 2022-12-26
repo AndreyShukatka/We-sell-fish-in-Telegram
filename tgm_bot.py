@@ -207,9 +207,6 @@ def handle_cart(bot, update):
         return "HANDLE_CART"
 
 
-
-
-
 def handle_contacts(bot, update):
     moltin_token = checking_period_token(moltin_client_id, moltin_client_secret, db)
     email = update.message.text
